@@ -1,0 +1,36 @@
+# Credentials & Environment Variables
+.env
+*.env
+
+# Input CAS PDF Statements & Generated Output Dashboard/CSV
+input/
+output/
+tracker_engine/input/
+tracker_engine/output/
+*.pdf
+*.PDF
+
+# SQLite Database Cache
+cas_tracker.db
+cas_tracker.db-journal
+tracker_engine/cas_tracker.db
+cas_passwords.json
+tracker_engine/cas_passwords.json
+
+# Python Virtual Environment & Cache
+.venv/
+env/
+venv/
+__pycache__/
+*.pyc
+
+# OS & Antigravity Scratch Files
+.DS_Store
+scratch/
+.idea/
+.vscode/
+.gemini/
+
+# Private Android Native App
+android_app/
+android/

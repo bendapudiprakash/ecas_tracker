@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEMO REPORT: Family eCAS Portfolio & Transaction Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-color: #0b0f19;
+      --card-bg: #151c2c;
+      --accent-color: #3b82f6;
+      --accent-hover: #2563eb;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border-color: #1f2937;
+      --green: #10b981;
+      --red: #ef4444;
+      --gold: #f59e0b;
+      --purple: #8b5cf6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-main); padding: 24px; line-height: 1.5; }
+
+    .demo-banner { background: linear-gradient(90deg, #f59e0b, #ef4444); color: #000; font-weight: 700; text-align: center; padding: 8px 16px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; letter-spacing: 0.5px; }
+
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); }
+    .header h1 { font-size: 24px; font-weight: 700; background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .family-bar { background: linear-gradient(135deg, #1e1b4b, #311b92); border: 1px solid #4338ca; border-radius: 12px; padding: 14px 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .family-title { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; color: #e0e7ff; }
+    .family-select { background: #0f172a; border: 1px solid #6366f1; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; outline: none; cursor: pointer; min-width: 280px; }
+
+    .investor-card { background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid #334155; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    .investor-info { display: flex; align-items: center; gap: 16px; }
+    .avatar { width: 44px; height: 44px; background: linear-gradient(135deg, var(--accent-color), var(--purple)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; color: #fff; }
+    .investor-details .name { font-size: 16px; font-weight: 700; color: #fff; }
+    .investor-details .sub { font-size: 13px; color: var(--text-muted); display: flex; gap: 12px; margin-top: 2px; }
+    .badge-info { background: #1e293b; border: 1px solid #334155; color: #94a3b8; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+
+    .tabs-nav { display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
+    .tab-btn { background: #1e293b; color: var(--text-muted); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+    .tab-btn:hover { background: #334155; color: #fff; }
+    .tab-btn.active { background: var(--accent-color); color: #fff; border-color: var(--accent-color); shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .kpi-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; transition: transform 0.2s ease, border-color 0.2s ease; }
+    .kpi-card:hover { transform: translateY(-2px); border-color: #3b82f6; }
+    .kpi-card .title { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600; }
+    .kpi-card .val { font-size: 24px; font-weight: 700; color: #fff; }
+    .kpi-card .delta { font-size: 13px; font-weight: 600; margin-top: 4px; display: inline-block; }
+    .delta.pos { color: var(--green); }
+    .delta.neg { color: var(--red); }
+
+    .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px; }
+    @media (max-width: 1024px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .chart-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+    .chart-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
+    .chart-container { position: relative; height: 340px; width: 100%; }
+
+    .data-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+    .table-controls { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .search-input, .select-filter { background: #0f172a; border: 1px solid var(--border-color); color: #fff; padding: 8px 14px; border-radius: 6px; font-size: 13px; outline: none; }
+    .search-input { flex: 1; min-width: 200px; }
+    .select-filter { min-width: 160px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+    th { background: #0f172a; color: var(--text-muted); padding: 12px 14px; font-weight: 600; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+    td { padding: 12px 14px; border-bottom: 1px solid var(--border-color); color: #cbd5e1; }
+    tr:hover td { background: #1e293b; color: #fff; }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    .badge-eq { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+
+    .methodology-box { background: rgba(30, 41, 59, 0.6); border-left: 4px solid var(--accent-color); padding: 16px; border-radius: 6px; margin-bottom: 24px; font-size: 13px; color: #94a3b8; }
+    .methodology-box h4 { color: #f3f4f6; margin-bottom: 6px; font-size: 14px; }
+
+    .tx-pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; font-size: 13px; color: var(--text-muted); }
+    .tx-btn { background: #1e293b; color: #fff; border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+    .tx-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+  <div class="demo-banner">
+    🚀 DEMO REPORT: GENERATED WITH SYNTHETIC SAMPLE DATA & MULTI-PAN FAMILY VIEW PREVIEW
+  </div>
+
+  <div class="header">
+    <div>
+      <h1>NSDL eCAS Portfolio & Transaction Analytics</h1>
+      <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Multi-Asset Growth, XIRR Engine, Zerodha Performance Curve & Full Transactions Log</p>
+    </div>
+  </div>
+
+  <div class="family-bar">
+    <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+      <div class="family-title">
+        <span>👨‍👩‍👧‍👦 Family Portfolio View</span>
+        <span style="font-size: 12px; color: #a5b4fc; font-weight: 400;">(2 Registered PAN Accounts)</span>
+      </div>
+      <div>
+        <select id="familySelect" class="family-select" onchange="onFilterChange()">
+          <option value="ALL">👨‍👩‍👧‍👦 Consolidated Family Portfolio (All PANs Combined)</option>
+        </select>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 13px; color: #a5b4fc; font-weight: 600;">📅 From Period:</span>
+        <select id="fromPeriodSelect" class="family-select" onchange="onFilterChange()"></select>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 13px; color: #a5b4fc; font-weight: 600;">📅 To Period:</span>
+        <select id="toPeriodSelect" class="family-select" onchange="onFilterChange()"></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="investor-card">
+    <div class="investor-info">
+      <div class="avatar" id="invAvatar">👨‍👩‍👧‍👦</div>
+      <div class="investor-details">
+        <div class="name" id="invName">Consolidated Family Portfolio</div>
+        <div class="sub">
+          <span>PAN: <strong style="color:#f3f4f6;" id="invPan">FAMILY_CONSOLIDATED</strong></span>
+          <span>•</span>
+          <span>NSDL CAS ID: <strong style="color:#f3f4f6;" id="invCas">MULTI-ACCOUNT</strong></span>
+        </div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <div class="badge-info">Sync Email: <strong>demo.family@example.com</strong></div>
+      <div class="badge-info">Statements: <strong>78 Monthly Files (JAN 2020 – JUN 2026)</strong></div>
+    </div>
+  </div>
+
+  <div class="tabs-nav">
+    <button class="tab-btn active" onclick="switchTab('tab-val')">💵 Portfolio Value & Trajectory</button>
+    <button class="tab-btn" onclick="switchTab('tab-xirr')">⚡ Category XIRR Performance</button>
+    <button class="tab-btn" onclick="switchTab('tab-zerodha')">📈 Zerodha Performance Curve</button>
+    <button class="tab-btn" onclick="switchTab('tab-tx')">📜 Full Transactions Log (100)</button>
+  </div>
+
+  <div id="tab-val" class="tab-content active">
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="title">Current Valuation (JUN 2026)</div>
+        <div class="val">₹4,550,070.00</div>
+        <div class="delta pos">▲ ₹129,070.00 MoM</div>
+      </div>
+      <div class="kpi-card">
+        <div class="title">Previous Valuation</div>
+        <div class="val">₹4,421,000.00</div>
+        <div class="delta" style="color: var(--text-muted);">Baseline Comparison</div>
+      </div>
+      <div class="kpi-card">
+        <div class="title">Organic Growth Rate</div>
+        <div class="val">+1.93%</div>
+        <div class="delta pos">Excludes Fresh Capital Inflow</div>
+      </div>
+      <div class="kpi-card">
+        <div class="title">Asset Classes Tracked</div>
+        <div class="val">7</div>
+        <div class="delta" style="color: var(--gold);">Equities, MFs, SGBs, AIFs, NPS</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="chart-card">
+        <h3>Portfolio Value Trajectory (₹) <span>Jan 2020 – JUN 2026</span></h3>
+        <div class="chart-container"><canvas id="chartValueTrajectory"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Asset Category Allocation</h3>
+        <div class="chart-container"><canvas id="chartCategoryDoughnut"></canvas></div>
+      </div>
+    </div>
+
+    <div class="data-card">
+      <h3>Latest MoM Category Performance Breakdown (JUN 2026)</h3>
+      <table style="margin-top: 14px;">
+        <thead><tr><th>Asset Category</th><th>Previous Value</th><th>Current Value</th><th>Net Capital Inflow</th><th>Market Gain</th><th>Organic Growth %</th></tr></thead>
+        <tbody id="tblMomBody"></tbody>
+      </table>
+    </div>
+
+    <div class="data-card">
+      <h3>Current Portfolio Holdings (JUN 2026)</h3>
+      <div class="table-controls" style="margin-top: 14px;">
+        <input type="text" id="holdingsSearch" class="search-input" placeholder="Search security name, ISIN..." oninput="filterHoldings()">
+        <select id="holdingsCategoryFilter" class="select-filter" onchange="filterHoldings()"><option value="ALL">All Categories</option></select>
+      </div>
+      <table>
+        <thead><tr><th>Asset Class</th><th>ISIN</th><th>Security Name</th><th>Depository / DP ID</th><th>Quantity</th><th>Current Price</th><th>Total Value (₹)</th></tr></thead>
+        <tbody id="tblHoldingsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-xirr" class="tab-content">
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="title">Overall Portfolio XIRR</div>
+        <div class="val" style="color: var(--green);">+16.85%</div>
+        <div class="delta pos">Compounded Annualized Return</div>
+      </div>
+      <div class="kpi-card">
+        <div class="title">Top Performing Category</div>
+        <div class="val" style="color: var(--gold);">Government Securities</div>
+        <div class="delta pos">+21.80% XIRR</div>
+      </div>
+      <div class="kpi-card">
+        <div class="title">Total Capital Injected</div>
+        <div class="val">₹3,695,000.00</div>
+        <div class="delta" style="color: var(--text-muted);">Across 78 Statements</div>
+      </div>
+      <div class="kpi-card">
+        <div class="title">Current Valuation</div>
+        <div class="val">₹4,550,070.00</div>
+        <div class="delta pos">Net Wealth</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="chart-card">
+        <h3>Category Annualized XIRR (%) Rate Comparison</h3>
+        <div class="chart-container"><canvas id="chartCategoryXirrBar"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Capital Injected vs Current Valuation</h3>
+        <div class="chart-container"><canvas id="chartCapitalVsValuation"></canvas></div>
+      </div>
+    </div>
+
+    <div class="data-card">
+      <h3>Category XIRR Performance Breakdown Table</h3>
+      <table style="margin-top: 14px;">
+        <thead><tr><th>Asset Category</th><th>First Holding Date</th><th>Capital Deployed (₹)</th><th>Current Valuation (₹)</th><th>Annualized XIRR %</th></tr></thead>
+        <tbody id="tblXirrBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-zerodha" class="tab-content">
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="title">Base Portfolio NAV</div>
+        <div class="val">100.00</div>
+        <div class="delta" style="color: var(--text-muted);">Jan 2020 Benchmark</div>
+      </div>
+      <div class="kpi-card">
+        <div class="title">Latest Portfolio NAV</div>
+        <div class="val" style="color: var(--accent-color);">144.91</div>
+        <div class="delta pos">+185.40% True Market Return</div>
+      </div>
+      <div class="kpi-card">
+        <div class="title">Calculation Methodology</div>
+        <div class="val" style="font-size: 18px; color: var(--gold);">Unitized NAV Indexing</div>
+        <div class="delta" style="color: var(--text-muted);">Isolates Deposits/Withdrawals</div>
+      </div>
+    </div>
+
+    <div class="methodology-box">
+      <h4>💡 Zerodha Console Unitized NAV Methodology Explained</h4>
+      <p>Standard portfolio valuation line charts spike falsely whenever fresh capital is deposited into a demat account or mutual fund. Zerodha Console's Unitized NAV methodology eliminates cashflow noise by creating a unitized index initialized at <strong>100.00</strong> in Month 0. In each subsequent month, the NAV compounds strictly by the organic price return of matched holdings: <code>NAV_t = NAV_(t-1) * (1 + r_t)</code>. This reflects your true investment compounding rate.</p>
+    </div>
+
+    <div class="chart-card">
+      <h3>Zerodha Console Portfolio Performance Curve (Base 100) vs Valuation</h3>
+      <div class="chart-container"><canvas id="chartZerodhaNavCurve"></canvas></div>
+    </div>
+  </div>
+
+  <div id="tab-tx" class="tab-content">
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="title">Total Real Trade Transactions</div>
+        <div class="val" style="color: var(--accent-color);">100</div>
+        <div class="delta" style="color: var(--text-muted);">SIPs, Purchases, Redemptions</div>
+      </div>
+      <div class="kpi-card">
+        <div class="title">CSV Export Path</div>
+        <div class="val" style="font-size: 15px; color: var(--green);">docs/sample_transactions.csv</div>
+        <div class="delta pos">Full Audit Trail Available</div>
+      </div>
+    </div>
+
+    <div class="data-card">
+      <h3>Full eCAS Transaction Log</h3>
+      <div class="table-controls" style="margin-top: 14px;">
+        <input type="text" id="txSearch" class="search-input" placeholder="Search date, ISIN, security name..." oninput="filterTx()">
+        <select id="txCategoryFilter" class="select-filter" onchange="filterTx()"><option value="ALL">All Asset Classes</option></select>
+      </div>
+      <table>
+        <thead><tr><th>Date</th><th>Statement Period</th><th>Asset Class</th><th>ISIN</th><th>Security / Fund Name</th><th>Transaction Description</th><th>Amount (₹)</th><th>Price / NAV (₹)</th><th>Units</th></tr></thead>
+        <tbody id="tblTxBody"></tbody>
+      </table>
+      <div class="tx-pagination">
+        <button class="tx-btn" onclick="prevTxPage()" id="btnPrevPage">◀ Previous</button>
+        <span id="txPageInfo">Page 1</span>
+        <button class="tx-btn" onclick="nextTxPage()" id="btnNextPage">Next ▶</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const timelineData = {"periods": ["JAN 2020", "FEB 2020", "MAR 2020", "APR 2020", "MAY 2020", "JUN 2020", "JUL 2020", "AUG 2020", "SEP 2020", "OCT 2020", "NOV 2020", "DEC 2020", "JAN 2021", "FEB 2021", "MAR 2021", "APR 2021", "MAY 2021", "JUN 2021", "JUL 2021", "AUG 2021", "SEP 2021", "OCT 2021", "NOV 2021", "DEC 2021", "JAN 2022", "FEB 2022", "MAR 2022", "APR 2022", "MAY 2022", "JUN 2022", "JUL 2022", "AUG 2022", "SEP 2022", "OCT 2022", "NOV 2022", "DEC 2022", "JAN 2023", "FEB 2023", "MAR 2023", "APR 2023", "MAY 2023", "JUN 2023", "JUL 2023", "AUG 2023", "SEP 2023", "OCT 2023", "NOV 2023", "DEC 2023", "JAN 2024", "FEB 2024", "MAR 2024", "APR 2024", "MAY 2024", "JUN 2024", "JUL 2024", "AUG 2024", "SEP 2024", "OCT 2024", "NOV 2024", "DEC 2024", "JAN 2025", "FEB 2025", "MAR 2025", "APR 2025", "MAY 2025", "JUN 2025", "JUL 2025", "AUG 2025", "SEP 2025", "OCT 2025", "NOV 2025", "DEC 2025", "JAN 2026", "FEB 2026", "MAR 2026", "APR 2026", "MAY 2026", "JUN 2026"], "portfolio_values": [1000000.0, 1050283.89, 1060681.7, 1087542.93, 1110647.69, 1169412.98, 1225032.15, 1298262.11, 1307916.33, 1344984.24, 1348884.47, 1368742.15, 1413100.76, 1415135.61, 1432484.3, 1490322.0, 1539228.66, 1557124.38, 1611002.55, 1687879.14, 1681373.22, 1759696.51, 1828100.45, 1856584.7, 1863355.72, 1964140.42, 1991687.4, 1988532.62, 1985935.7, 2077320.67, 2139398.0, 2229699.47, 2311463.19, 2366763.31, 2487691.71, 2519825.06, 2579465.32, 2684762.18, 2757259.57, 2873012.91, 2940688.22, 3032702.36, 3000640.02, 3003705.98, 3018375.22, 2993088.89, 2997157.79, 2976300.03, 2989014.5, 3068993.55, 3097807.77, 3127607.79, 3125698.71, 3135129.25, 3276752.61, 3363611.25, 3443600.4, 3429638.38, 3536437.82, 3519432.23, 3550580.89, 3718159.48, 3810121.63, 3883557.5, 3988969.11, 4136057.83, 4269859.96, 4259727.66, 4196848.98, 4210334.01, 4211094.21, 4196790.38, 4376173.87, 4543383.16, 4554869.82, 4664080.66, 4698729.97, 4886986.09], "cum_inflows": [1000000.0, 1035000.0, 1070000.0, 1105000.0, 1140000.0, 1175000.0, 1210000.0, 1245000.0, 1280000.0, 1315000.0, 1350000.0, 1385000.0, 1420000.0, 1455000.0, 1490000.0, 1525000.0, 1560000.0, 1595000.0, 1630000.0, 1665000.0, 1700000.0, 1735000.0, 1770000.0, 1805000.0, 1840000.0, 1875000.0, 1910000.0, 1945000.0, 1980000.0, 2015000.0, 2050000.0, 2085000.0, 2120000.0, 2155000.0, 2190000.0, 2225000.0, 2260000.0, 2295000.0, 2330000.0, 2365000.0, 2400000.0, 2435000.0, 2470000.0, 2505000.0, 2540000.0, 2575000.0, 2610000.0, 2645000.0, 2680000.0, 2715000.0, 2750000.0, 2785000.0, 2820000.0, 2855000.0, 2890000.0, 2925000.0, 2960000.0, 2995000.0, 3030000.0, 3065000.0, 3100000.0, 3135000.0, 3170000.0, 3205000.0, 3240000.0, 3275000.0, 3310000.0, 3345000.0, 3380000.0, 3415000.0, 3450000.0, 3485000.0, 3520000.0, 3555000.0, 3590000.0, 3625000.0, 3660000.0, 3695000.0], "cum_appreciation": [0.0, 15283.888302846673, -9318.300170065995, -17457.07307773728, -29352.316936785774, -5587.025862732171, 15032.142978824879, 53262.10443155173, 27916.323395847096, 29984.236736676976, -1115.5314593013718, -16257.848977116966, -6899.234463311634, -39864.37953087254, -57515.68865486125, -34677.99315705114, -20771.331689951676, -37875.61122373579, -18997.443076121122, 22879.148548484398, -18626.775335037844, 24696.51750706565, 58100.45253888618, 51584.704997520406, 23355.721709915415, 89140.42127129796, 81687.40469735305, 43532.62554009773, 5935.701264055722, 62320.67577778855, 89398.01055824576, 144699.48321420548, 191463.19888030709, 211763.32330532122, 297691.72580916784, 294825.07348343555, 319465.3334431269, 389762.196207398, 427259.5833474191, 508012.91873468546, 540688.2265018345, 597702.3652325971, 530640.0243694556, 498705.9871132241, 478375.22809235944, 418088.90152412804, 387157.7996607365, 331300.0398309963, 309014.5082073701, 353993.55705120636, 347807.77735897934, 342607.8001121493, 305698.7221166918, 280129.26510727574, 386752.625147576, 438611.2632162612, 483600.41587953485, 434638.39227513166, 506437.8315337641, 454432.23983954993, 450580.8999185074, 583159.4877041884, 640121.6346850393, 678557.5086664998, 748969.1161359322, 861057.8356442363, 959859.962038736, 914727.6640966039, 816848.9852982027, 795334.0153862356, 761094.2116434602, 711790.3801487102, 856173.8690034942, 988383.1600249618, 964869.8186449521, 1039080.6542559542, 1038729.9609435671, 1191986.078334592], "nav_series": [100.0, 101.53, 99.15, 98.39, 97.31, 99.39, 101.14, 104.3, 102.26, 102.42, 100.05, 98.93, 99.61, 97.29, 96.08, 97.61, 98.52, 97.43, 98.61, 101.17, 98.68, 101.22, 103.14, 102.77, 101.21, 104.78, 104.38, 102.38, 100.44, 103.29, 104.64, 107.34, 109.59, 110.55, 114.56, 114.43, 115.55, 118.7, 120.36, 123.89, 125.3, 127.73, 124.91, 123.58, 122.74, 120.29, 119.05, 116.83, 115.96, 117.7, 117.46, 117.26, 115.88, 114.93, 118.84, 120.72, 122.33, 120.59, 123.11, 121.3, 121.17, 125.69, 127.62, 128.91, 131.25, 134.94, 138.16, 136.7, 133.56, 132.88, 131.8, 130.26, 134.74, 138.81, 138.09, 140.34, 140.33, 144.91]};
+    const categoryXirrs = {"Equities (E)": {"first_date": "JAN 2020", "init_value": 1550000.0, "curr_value": 2290500.0, "xirr_pct": 18.45}, "Mutual Funds (M)": {"first_date": "JAN 2020", "init_value": 850000.0, "curr_value": 1267250.0, "xirr_pct": 15.2}, "Government Securities (G)": {"first_date": "SEP 2021", "init_value": 285000.0, "curr_value": 447000.0, "xirr_pct": 21.8}, "Alternate Investment Fund (A)": {"first_date": "AUG 2024", "init_value": 350000.0, "curr_value": 360000.0, "xirr_pct": 4.5}, "National Pension System (N)": {"first_date": "JAN 2021", "init_value": 140000.0, "curr_value": 173440.0, "xirr_pct": 11.35}, "Corporate Bonds (C)": {"first_date": "JUL 2023", "init_value": 10000.0, "curr_value": 10200.0, "xirr_pct": 8.1}, "Preference Shares (P)": {"first_date": "SEP 2024", "init_value": 1500.0, "curr_value": 1680.0, "xirr_pct": 6.75}};
+    const holdingsData = [{"asset_class": "Equities (E)", "isin": "INE002A01018", "security_name": "RELIANCE INDUSTRIES LIMITED", "depository": "NSDL", "dp_id": "IN300123", "quantity": 450, "price": 2850.0, "value": 1282500.0, "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)"}, {"asset_class": "Equities (E)", "isin": "INE040A01034", "security_name": "HDFC BANK LIMITED", "depository": "NSDL", "dp_id": "IN300123", "quantity": 600, "price": 1680.0, "value": 1008000.0, "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)"}, {"asset_class": "Mutual Funds (M)", "isin": "INF879O01019", "security_name": "PARAG PARIKH FLEXI CAP FUND", "depository": "CAMS", "dp_id": "FOLIO-88912", "quantity": 18500, "price": 68.5, "value": 1267250.0, "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)"}, {"asset_class": "Government Securities (G)", "isin": "IN0020210145", "security_name": "GOVT OF INDIA SGB 2021-22 SERIES VI", "depository": "CDSL", "dp_id": "12081600", "quantity": 60, "price": 7450.0, "value": 447000.0, "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)"}, {"asset_class": "Alternate Investment Fund (A)", "isin": "INFAIF009912", "security_name": "INDIA VENTURE OPPORTUNITY FUND", "depository": "NSDL", "dp_id": "IN300999", "quantity": 300, "price": 1200.0, "value": 360000.0, "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)"}, {"asset_class": "National Pension System (N)", "isin": "NPS_ICICI_SCHEME_E", "security_name": "ICICI PENSION FUND SCHEME E - TIER 1", "depository": "CRA (NPS)", "dp_id": "PRAN-110099", "quantity": 3200, "price": 54.2, "value": 173440.0, "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)"}, {"asset_class": "Corporate Bonds (C)", "isin": "INE018A07890", "security_name": "L&T FINANCE 8.5% CORPORATE BONDS", "depository": "NSDL", "dp_id": "IN300123", "quantity": 10, "price": 1020.0, "value": 10200.0, "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)"}, {"asset_class": "Preference Shares (P)", "isin": "INE155A04010", "security_name": "TATA MOTORS 7% PREFERENCE SHARES", "depository": "NSDL", "dp_id": "IN300123", "quantity": 150, "price": 11.2, "value": 1680.0, "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)"}];
+    const momSummary = {"Equities (E)": {"prev_value": 2210000.0, "curr_value": 2290500.0, "net_capital_inflow": 25000.0, "market_appreciation": 55500.0, "organic_growth_pct": 2.51}, "Mutual Funds (M)": {"prev_value": 1240000.0, "curr_value": 1267250.0, "net_capital_inflow": 15000.0, "market_appreciation": 12250.0, "organic_growth_pct": 0.99}, "Government Securities (G)": {"prev_value": 440000.0, "curr_value": 447000.0, "net_capital_inflow": 0.0, "market_appreciation": 7000.0, "organic_growth_pct": 1.59}, "Alternate Investment Fund (A)": {"prev_value": 360000.0, "curr_value": 360000.0, "net_capital_inflow": 0.0, "market_appreciation": 0.0, "organic_growth_pct": 0.0}, "National Pension System (N)": {"prev_value": 171000.0, "curr_value": 173440.0, "net_capital_inflow": 2000.0, "market_appreciation": 440.0, "organic_growth_pct": 0.26}};
+    const transactionsData = [{"statement_period": "JAN 2020", "transaction_date": "2020-01-15", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE002A01018", "security_name": "RELIANCE INDUSTRIES LIMITED", "asset_class": "Equities (E)", "transaction_type": "Redemption", "amount": 23354.07, "units": 8.194, "price_nav": 2850.0, "pdf_filename": "NSDLe-CAS_DEMO_JAN_2020.PDF"}, {"statement_period": "FEB 2020", "transaction_date": "2020-02-07", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE040A01034", "security_name": "HDFC BANK LIMITED", "asset_class": "Equities (E)", "transaction_type": "Purchase", "amount": 15595.21, "units": 9.283, "price_nav": 1680.0, "pdf_filename": "NSDLe-CAS_DEMO_FEB_2020.PDF"}, {"statement_period": "MAR 2020", "transaction_date": "2020-03-01", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INF879O01019", "security_name": "PARAG PARIKH FLEXI CAP FUND", "asset_class": "Mutual Funds (M)", "transaction_type": "Monthly SIP Purchase", "amount": 14865.1, "units": 217.009, "price_nav": 68.5, "pdf_filename": "NSDLe-CAS_DEMO_MAR_2020.PDF"}, {"statement_period": "MAR 2020", "transaction_date": "2020-03-24", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "IN0020210145", "security_name": "GOVT OF INDIA SGB 2021-22 SERIES VI", "asset_class": "Government Securities (G)", "transaction_type": "Purchase", "amount": 27454.73, "units": 3.685, "price_nav": 7450.0, "pdf_filename": "NSDLe-CAS_DEMO_MAR_2020.PDF"}, {"statement_period": "APR 2020", "transaction_date": "2020-04-16", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INFAIF009912", "security_name": "INDIA VENTURE OPPORTUNITY FUND", "asset_class": "Alternate Investment Fund (A)", "transaction_type": "Redemption", "amount": 15509.66, "units": 12.925, "price_nav": 1200.0, "pdf_filename": "NSDLe-CAS_DEMO_APR_2020.PDF"}, {"statement_period": "MAY 2020", "transaction_date": "2020-05-09", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "NPS_ICICI_SCHEME_E", "security_name": "ICICI PENSION FUND SCHEME E - TIER 1", "asset_class": "National Pension System (N)", "transaction_type": "Purchase", "amount": 28383.44, "units": 523.68, "price_nav": 54.2, "pdf_filename": "NSDLe-CAS_DEMO_MAY_2020.PDF"}, {"statement_period": "JUN 2020", "transaction_date": "2020-06-01", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INE018A07890", "security_name": "L&T FINANCE 8.5% CORPORATE BONDS", "asset_class": "Corporate Bonds (C)", "transaction_type": "Purchase", "amount": 40912.92, "units": 40.111, "price_nav": 1020.0, "pdf_filename": "NSDLe-CAS_DEMO_JUN_2020.PDF"}, {"statement_period": "JUN 2020", "transaction_date": "2020-06-24", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE155A04010", "security_name": "TATA MOTORS 7% PREFERENCE SHARES", "asset_class": "Preference Shares (P)", "transaction_type": "Purchase", "amount": 20976.02, "units": 1872.859, "price_nav": 11.2, "pdf_filename": "NSDLe-CAS_DEMO_JUN_2020.PDF"}, {"statement_period": "JUL 2020", "transaction_date": "2020-07-17", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE002A01018", "security_name": "RELIANCE INDUSTRIES LIMITED", "asset_class": "Equities (E)", "transaction_type": "Redemption", "amount": 13772.83, "units": 4.833, "price_nav": 2850.0, "pdf_filename": "NSDLe-CAS_DEMO_JUL_2020.PDF"}, {"statement_period": "AUG 2020", "transaction_date": "2020-08-09", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE040A01034", "security_name": "HDFC BANK LIMITED", "asset_class": "Equities (E)", "transaction_type": "Purchase", "amount": 44901.5, "units": 26.727, "price_nav": 1680.0, "pdf_filename": "NSDLe-CAS_DEMO_AUG_2020.PDF"}, {"statement_period": "SEP 2020", "transaction_date": "2020-09-01", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INF879O01019", "security_name": "PARAG PARIKH FLEXI CAP FUND", "asset_class": "Mutual Funds (M)", "transaction_type": "Monthly SIP Purchase", "amount": 25381.05, "units": 370.526, "price_nav": 68.5, "pdf_filename": "NSDLe-CAS_DEMO_SEP_2020.PDF"}, {"statement_period": "SEP 2020", "transaction_date": "2020-09-24", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "IN0020210145", "security_name": "GOVT OF INDIA SGB 2021-22 SERIES VI", "asset_class": "Government Securities (G)", "transaction_type": "Purchase", "amount": 8636.38, "units": 1.159, "price_nav": 7450.0, "pdf_filename": "NSDLe-CAS_DEMO_SEP_2020.PDF"}, {"statement_period": "OCT 2020", "transaction_date": "2020-10-17", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INFAIF009912", "security_name": "INDIA VENTURE OPPORTUNITY FUND", "asset_class": "Alternate Investment Fund (A)", "transaction_type": "Redemption", "amount": 6884.66, "units": 5.737, "price_nav": 1200.0, "pdf_filename": "NSDLe-CAS_DEMO_OCT_2020.PDF"}, {"statement_period": "NOV 2020", "transaction_date": "2020-11-09", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "NPS_ICICI_SCHEME_E", "security_name": "ICICI PENSION FUND SCHEME E - TIER 1", "asset_class": "National Pension System (N)", "transaction_type": "Purchase", "amount": 9385.97, "units": 173.173, "price_nav": 54.2, "pdf_filename": "NSDLe-CAS_DEMO_NOV_2020.PDF"}, {"statement_period": "DEC 2020", "transaction_date": "2020-12-02", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INE018A07890", "security_name": "L&T FINANCE 8.5% CORPORATE BONDS", "asset_class": "Corporate Bonds (C)", "transaction_type": "Purchase", "amount": 30097.84, "units": 29.508, "price_nav": 1020.0, "pdf_filename": "NSDLe-CAS_DEMO_DEC_2020.PDF"}, {"statement_period": "DEC 2020", "transaction_date": "2020-12-25", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE155A04010", "security_name": "TATA MOTORS 7% PREFERENCE SHARES", "asset_class": "Preference Shares (P)", "transaction_type": "Purchase", "amount": 36683.17, "units": 3275.283, "price_nav": 11.2, "pdf_filename": "NSDLe-CAS_DEMO_DEC_2020.PDF"}, {"statement_period": "JAN 2021", "transaction_date": "2021-01-17", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE002A01018", "security_name": "RELIANCE INDUSTRIES LIMITED", "asset_class": "Equities (E)", "transaction_type": "Redemption", "amount": 21886.4, "units": 7.679, "price_nav": 2850.0, "pdf_filename": "NSDLe-CAS_DEMO_JAN_2021.PDF"}, {"statement_period": "FEB 2021", "transaction_date": "2021-02-09", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE040A01034", "security_name": "HDFC BANK LIMITED", "asset_class": "Equities (E)", "transaction_type": "Purchase", "amount": 7541.11, "units": 4.489, "price_nav": 1680.0, "pdf_filename": "NSDLe-CAS_DEMO_FEB_2021.PDF"}, {"statement_period": "MAR 2021", "transaction_date": "2021-03-04", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INF879O01019", "security_name": "PARAG PARIKH FLEXI CAP FUND", "asset_class": "Mutual Funds (M)", "transaction_type": "Monthly SIP Purchase", "amount": 20264.77, "units": 295.836, "price_nav": 68.5, "pdf_filename": "NSDLe-CAS_DEMO_MAR_2021.PDF"}, {"statement_period": "MAR 2021", "transaction_date": "2021-03-27", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "IN0020210145", "security_name": "GOVT OF INDIA SGB 2021-22 SERIES VI", "asset_class": "Government Securities (G)", "transaction_type": "Purchase", "amount": 44844.86, "units": 6.019, "price_nav": 7450.0, "pdf_filename": "NSDLe-CAS_DEMO_MAR_2021.PDF"}, {"statement_period": "APR 2021", "transaction_date": "2021-04-19", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INFAIF009912", "security_name": "INDIA VENTURE OPPORTUNITY FUND", "asset_class": "Alternate Investment Fund (A)", "transaction_type": "Redemption", "amount": 26164.57, "units": 21.804, "price_nav": 1200.0, "pdf_filename": "NSDLe-CAS_DEMO_APR_2021.PDF"}, {"statement_period": "MAY 2021", "transaction_date": "2021-05-12", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "NPS_ICICI_SCHEME_E", "security_name": "ICICI PENSION FUND SCHEME E - TIER 1", "asset_class": "National Pension System (N)", "transaction_type": "Purchase", "amount": 43843.14, "units": 808.914, "price_nav": 54.2, "pdf_filename": "NSDLe-CAS_DEMO_MAY_2021.PDF"}, {"statement_period": "JUN 2021", "transaction_date": "2021-06-04", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INE018A07890", "security_name": "L&T FINANCE 8.5% CORPORATE BONDS", "asset_class": "Corporate Bonds (C)", "transaction_type": "Purchase", "amount": 39431.19, "units": 38.658, "price_nav": 1020.0, "pdf_filename": "NSDLe-CAS_DEMO_JUN_2021.PDF"}, {"statement_period": "JUN 2021", "transaction_date": "2021-06-27", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE155A04010", "security_name": "TATA MOTORS 7% PREFERENCE SHARES", "asset_class": "Preference Shares (P)", "transaction_type": "Purchase", "amount": 5459.24, "units": 487.432, "price_nav": 11.2, "pdf_filename": "NSDLe-CAS_DEMO_JUN_2021.PDF"}, {"statement_period": "JUL 2021", "transaction_date": "2021-07-20", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE002A01018", "security_name": "RELIANCE INDUSTRIES LIMITED", "asset_class": "Equities (E)", "transaction_type": "Redemption", "amount": 33828.87, "units": 11.87, "price_nav": 2850.0, "pdf_filename": "NSDLe-CAS_DEMO_JUL_2021.PDF"}, {"statement_period": "AUG 2021", "transaction_date": "2021-08-12", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE040A01034", "security_name": "HDFC BANK LIMITED", "asset_class": "Equities (E)", "transaction_type": "Purchase", "amount": 32268.41, "units": 19.207, "price_nav": 1680.0, "pdf_filename": "NSDLe-CAS_DEMO_AUG_2021.PDF"}, {"statement_period": "SEP 2021", "transaction_date": "2021-09-04", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INF879O01019", "security_name": "PARAG PARIKH FLEXI CAP FUND", "asset_class": "Mutual Funds (M)", "transaction_type": "Monthly SIP Purchase", "amount": 26478.81, "units": 386.552, "price_nav": 68.5, "pdf_filename": "NSDLe-CAS_DEMO_SEP_2021.PDF"}, {"statement_period": "SEP 2021", "transaction_date": "2021-09-27", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "IN0020210145", "security_name": "GOVT OF INDIA SGB 2021-22 SERIES VI", "asset_class": "Government Securities (G)", "transaction_type": "Purchase", "amount": 15673.01, "units": 2.104, "price_nav": 7450.0, "pdf_filename": "NSDLe-CAS_DEMO_SEP_2021.PDF"}, {"statement_period": "OCT 2021", "transaction_date": "2021-10-20", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INFAIF009912", "security_name": "INDIA VENTURE OPPORTUNITY FUND", "asset_class": "Alternate Investment Fund (A)", "transaction_type": "Redemption", "amount": 30638.47, "units": 25.532, "price_nav": 1200.0, "pdf_filename": "NSDLe-CAS_DEMO_OCT_2021.PDF"}, {"statement_period": "NOV 2021", "transaction_date": "2021-11-12", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "NPS_ICICI_SCHEME_E", "security_name": "ICICI PENSION FUND SCHEME E - TIER 1", "asset_class": "National Pension System (N)", "transaction_type": "Purchase", "amount": 9462.09, "units": 174.577, "price_nav": 54.2, "pdf_filename": "NSDLe-CAS_DEMO_NOV_2021.PDF"}, {"statement_period": "DEC 2021", "transaction_date": "2021-12-05", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INE018A07890", "security_name": "L&T FINANCE 8.5% CORPORATE BONDS", "asset_class": "Corporate Bonds (C)", "transaction_type": "Purchase", "amount": 22390.61, "units": 21.952, "price_nav": 1020.0, "pdf_filename": "NSDLe-CAS_DEMO_DEC_2021.PDF"}, {"statement_period": "DEC 2021", "transaction_date": "2021-12-28", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE155A04010", "security_name": "TATA MOTORS 7% PREFERENCE SHARES", "asset_class": "Preference Shares (P)", "transaction_type": "Purchase", "amount": 23148.95, "units": 2066.871, "price_nav": 11.2, "pdf_filename": "NSDLe-CAS_DEMO_DEC_2021.PDF"}, {"statement_period": "JAN 2022", "transaction_date": "2022-01-20", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE002A01018", "security_name": "RELIANCE INDUSTRIES LIMITED", "asset_class": "Equities (E)", "transaction_type": "Redemption", "amount": 43152.64, "units": 15.141, "price_nav": 2850.0, "pdf_filename": "NSDLe-CAS_DEMO_JAN_2022.PDF"}, {"statement_period": "FEB 2022", "transaction_date": "2022-02-12", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE040A01034", "security_name": "HDFC BANK LIMITED", "asset_class": "Equities (E)", "transaction_type": "Purchase", "amount": 40034.12, "units": 23.83, "price_nav": 1680.0, "pdf_filename": "NSDLe-CAS_DEMO_FEB_2022.PDF"}, {"statement_period": "MAR 2022", "transaction_date": "2022-03-07", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INF879O01019", "security_name": "PARAG PARIKH FLEXI CAP FUND", "asset_class": "Mutual Funds (M)", "transaction_type": "Monthly SIP Purchase", "amount": 15535.56, "units": 226.796, "price_nav": 68.5, "pdf_filename": "NSDLe-CAS_DEMO_MAR_2022.PDF"}, {"statement_period": "MAR 2022", "transaction_date": "2022-03-30", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "IN0020210145", "security_name": "GOVT OF INDIA SGB 2021-22 SERIES VI", "asset_class": "Government Securities (G)", "transaction_type": "Purchase", "amount": 25023.44, "units": 3.359, "price_nav": 7450.0, "pdf_filename": "NSDLe-CAS_DEMO_MAR_2022.PDF"}, {"statement_period": "APR 2022", "transaction_date": "2022-04-22", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INFAIF009912", "security_name": "INDIA VENTURE OPPORTUNITY FUND", "asset_class": "Alternate Investment Fund (A)", "transaction_type": "Redemption", "amount": 12146.08, "units": 10.122, "price_nav": 1200.0, "pdf_filename": "NSDLe-CAS_DEMO_APR_2022.PDF"}, {"statement_period": "MAY 2022", "transaction_date": "2022-05-15", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "NPS_ICICI_SCHEME_E", "security_name": "ICICI PENSION FUND SCHEME E - TIER 1", "asset_class": "National Pension System (N)", "transaction_type": "Purchase", "amount": 41505.11, "units": 765.777, "price_nav": 54.2, "pdf_filename": "NSDLe-CAS_DEMO_MAY_2022.PDF"}, {"statement_period": "JUN 2022", "transaction_date": "2022-06-07", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INE018A07890", "security_name": "L&T FINANCE 8.5% CORPORATE BONDS", "asset_class": "Corporate Bonds (C)", "transaction_type": "Purchase", "amount": 39820.74, "units": 39.04, "price_nav": 1020.0, "pdf_filename": "NSDLe-CAS_DEMO_JUN_2022.PDF"}, {"statement_period": "JUN 2022", "transaction_date": "2022-06-30", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE155A04010", "security_name": "TATA MOTORS 7% PREFERENCE SHARES", "asset_class": "Preference Shares (P)", "transaction_type": "Purchase", "amount": 16937.79, "units": 1512.303, "price_nav": 11.2, "pdf_filename": "NSDLe-CAS_DEMO_JUN_2022.PDF"}, {"statement_period": "JUL 2022", "transaction_date": "2022-07-23", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE002A01018", "security_name": "RELIANCE INDUSTRIES LIMITED", "asset_class": "Equities (E)", "transaction_type": "Redemption", "amount": 30557.98, "units": 10.722, "price_nav": 2850.0, "pdf_filename": "NSDLe-CAS_DEMO_JUL_2022.PDF"}, {"statement_period": "AUG 2022", "transaction_date": "2022-08-15", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE040A01034", "security_name": "HDFC BANK LIMITED", "asset_class": "Equities (E)", "transaction_type": "Purchase", "amount": 29358.81, "units": 17.475, "price_nav": 1680.0, "pdf_filename": "NSDLe-CAS_DEMO_AUG_2022.PDF"}, {"statement_period": "SEP 2022", "transaction_date": "2022-09-07", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INF879O01019", "security_name": "PARAG PARIKH FLEXI CAP FUND", "asset_class": "Mutual Funds (M)", "transaction_type": "Monthly SIP Purchase", "amount": 11113.57, "units": 162.242, "price_nav": 68.5, "pdf_filename": "NSDLe-CAS_DEMO_SEP_2022.PDF"}, {"statement_period": "SEP 2022", "transaction_date": "2022-09-30", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "IN0020210145", "security_name": "GOVT OF INDIA SGB 2021-22 SERIES VI", "asset_class": "Government Securities (G)", "transaction_type": "Purchase", "amount": 35500.43, "units": 4.765, "price_nav": 7450.0, "pdf_filename": "NSDLe-CAS_DEMO_SEP_2022.PDF"}, {"statement_period": "OCT 2022", "transaction_date": "2022-10-23", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INFAIF009912", "security_name": "INDIA VENTURE OPPORTUNITY FUND", "asset_class": "Alternate Investment Fund (A)", "transaction_type": "Redemption", "amount": 26575.16, "units": 22.146, "price_nav": 1200.0, "pdf_filename": "NSDLe-CAS_DEMO_OCT_2022.PDF"}, {"statement_period": "NOV 2022", "transaction_date": "2022-11-15", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "NPS_ICICI_SCHEME_E", "security_name": "ICICI PENSION FUND SCHEME E - TIER 1", "asset_class": "National Pension System (N)", "transaction_type": "Purchase", "amount": 36145.06, "units": 666.883, "price_nav": 54.2, "pdf_filename": "NSDLe-CAS_DEMO_NOV_2022.PDF"}, {"statement_period": "DEC 2022", "transaction_date": "2022-12-08", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INE018A07890", "security_name": "L&T FINANCE 8.5% CORPORATE BONDS", "asset_class": "Corporate Bonds (C)", "transaction_type": "Purchase", "amount": 26214.15, "units": 25.7, "price_nav": 1020.0, "pdf_filename": "NSDLe-CAS_DEMO_DEC_2022.PDF"}, {"statement_period": "DEC 2022", "transaction_date": "2022-12-31", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE155A04010", "security_name": "TATA MOTORS 7% PREFERENCE SHARES", "asset_class": "Preference Shares (P)", "transaction_type": "Purchase", "amount": 5022.88, "units": 448.471, "price_nav": 11.2, "pdf_filename": "NSDLe-CAS_DEMO_DEC_2022.PDF"}, {"statement_period": "JAN 2023", "transaction_date": "2023-01-23", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE002A01018", "security_name": "RELIANCE INDUSTRIES LIMITED", "asset_class": "Equities (E)", "transaction_type": "Redemption", "amount": 17966.24, "units": 6.304, "price_nav": 2850.0, "pdf_filename": "NSDLe-CAS_DEMO_JAN_2023.PDF"}, {"statement_period": "FEB 2023", "transaction_date": "2023-02-15", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE040A01034", "security_name": "HDFC BANK LIMITED", "asset_class": "Equities (E)", "transaction_type": "Purchase", "amount": 5779.07, "units": 3.44, "price_nav": 1680.0, "pdf_filename": "NSDLe-CAS_DEMO_FEB_2023.PDF"}, {"statement_period": "MAR 2023", "transaction_date": "2023-03-10", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INF879O01019", "security_name": "PARAG PARIKH FLEXI CAP FUND", "asset_class": "Mutual Funds (M)", "transaction_type": "Monthly SIP Purchase", "amount": 42163.94, "units": 615.532, "price_nav": 68.5, "pdf_filename": "NSDLe-CAS_DEMO_MAR_2023.PDF"}, {"statement_period": "APR 2023", "transaction_date": "2023-04-02", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "IN0020210145", "security_name": "GOVT OF INDIA SGB 2021-22 SERIES VI", "asset_class": "Government Securities (G)", "transaction_type": "Purchase", "amount": 40148.88, "units": 5.389, "price_nav": 7450.0, "pdf_filename": "NSDLe-CAS_DEMO_APR_2023.PDF"}, {"statement_period": "APR 2023", "transaction_date": "2023-04-25", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INFAIF009912", "security_name": "INDIA VENTURE OPPORTUNITY FUND", "asset_class": "Alternate Investment Fund (A)", "transaction_type": "Redemption", "amount": 38266.62, "units": 31.889, "price_nav": 1200.0, "pdf_filename": "NSDLe-CAS_DEMO_APR_2023.PDF"}, {"statement_period": "MAY 2023", "transaction_date": "2023-05-18", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "NPS_ICICI_SCHEME_E", "security_name": "ICICI PENSION FUND SCHEME E - TIER 1", "asset_class": "National Pension System (N)", "transaction_type": "Purchase", "amount": 17300.57, "units": 319.199, "price_nav": 54.2, "pdf_filename": "NSDLe-CAS_DEMO_MAY_2023.PDF"}, {"statement_period": "JUN 2023", "transaction_date": "2023-06-10", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INE018A07890", "security_name": "L&T FINANCE 8.5% CORPORATE BONDS", "asset_class": "Corporate Bonds (C)", "transaction_type": "Purchase", "amount": 7317.01, "units": 7.174, "price_nav": 1020.0, "pdf_filename": "NSDLe-CAS_DEMO_JUN_2023.PDF"}, {"statement_period": "JUL 2023", "transaction_date": "2023-07-03", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE155A04010", "security_name": "TATA MOTORS 7% PREFERENCE SHARES", "asset_class": "Preference Shares (P)", "transaction_type": "Purchase", "amount": 40120.38, "units": 3582.177, "price_nav": 11.2, "pdf_filename": "NSDLe-CAS_DEMO_JUL_2023.PDF"}, {"statement_period": "JUL 2023", "transaction_date": "2023-07-26", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE002A01018", "security_name": "RELIANCE INDUSTRIES LIMITED", "asset_class": "Equities (E)", "transaction_type": "Redemption", "amount": 42877.98, "units": 15.045, "price_nav": 2850.0, "pdf_filename": "NSDLe-CAS_DEMO_JUL_2023.PDF"}, {"statement_period": "AUG 2023", "transaction_date": "2023-08-18", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE040A01034", "security_name": "HDFC BANK LIMITED", "asset_class": "Equities (E)", "transaction_type": "Purchase", "amount": 8426.14, "units": 5.016, "price_nav": 1680.0, "pdf_filename": "NSDLe-CAS_DEMO_AUG_2023.PDF"}, {"statement_period": "SEP 2023", "transaction_date": "2023-09-10", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INF879O01019", "security_name": "PARAG PARIKH FLEXI CAP FUND", "asset_class": "Mutual Funds (M)", "transaction_type": "Monthly SIP Purchase", "amount": 24439.62, "units": 356.783, "price_nav": 68.5, "pdf_filename": "NSDLe-CAS_DEMO_SEP_2023.PDF"}, {"statement_period": "OCT 2023", "transaction_date": "2023-10-03", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "IN0020210145", "security_name": "GOVT OF INDIA SGB 2021-22 SERIES VI", "asset_class": "Government Securities (G)", "transaction_type": "Purchase", "amount": 7768.5, "units": 1.043, "price_nav": 7450.0, "pdf_filename": "NSDLe-CAS_DEMO_OCT_2023.PDF"}, {"statement_period": "OCT 2023", "transaction_date": "2023-10-26", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INFAIF009912", "security_name": "INDIA VENTURE OPPORTUNITY FUND", "asset_class": "Alternate Investment Fund (A)", "transaction_type": "Redemption", "amount": 35424.09, "units": 29.52, "price_nav": 1200.0, "pdf_filename": "NSDLe-CAS_DEMO_OCT_2023.PDF"}, {"statement_period": "NOV 2023", "transaction_date": "2023-11-18", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "NPS_ICICI_SCHEME_E", "security_name": "ICICI PENSION FUND SCHEME E - TIER 1", "asset_class": "National Pension System (N)", "transaction_type": "Purchase", "amount": 35633.38, "units": 657.442, "price_nav": 54.2, "pdf_filename": "NSDLe-CAS_DEMO_NOV_2023.PDF"}, {"statement_period": "DEC 2023", "transaction_date": "2023-12-11", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INE018A07890", "security_name": "L&T FINANCE 8.5% CORPORATE BONDS", "asset_class": "Corporate Bonds (C)", "transaction_type": "Purchase", "amount": 10135.66, "units": 9.937, "price_nav": 1020.0, "pdf_filename": "NSDLe-CAS_DEMO_DEC_2023.PDF"}, {"statement_period": "JAN 2024", "transaction_date": "2024-01-03", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE155A04010", "security_name": "TATA MOTORS 7% PREFERENCE SHARES", "asset_class": "Preference Shares (P)", "transaction_type": "Purchase", "amount": 24011.3, "units": 2143.866, "price_nav": 11.2, "pdf_filename": "NSDLe-CAS_DEMO_JAN_2024.PDF"}, {"statement_period": "JAN 2024", "transaction_date": "2024-01-26", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE002A01018", "security_name": "RELIANCE INDUSTRIES LIMITED", "asset_class": "Equities (E)", "transaction_type": "Redemption", "amount": 26992.14, "units": 9.471, "price_nav": 2850.0, "pdf_filename": "NSDLe-CAS_DEMO_JAN_2024.PDF"}, {"statement_period": "FEB 2024", "transaction_date": "2024-02-18", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE040A01034", "security_name": "HDFC BANK LIMITED", "asset_class": "Equities (E)", "transaction_type": "Purchase", "amount": 15602.27, "units": 9.287, "price_nav": 1680.0, "pdf_filename": "NSDLe-CAS_DEMO_FEB_2024.PDF"}, {"statement_period": "MAR 2024", "transaction_date": "2024-03-12", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INF879O01019", "security_name": "PARAG PARIKH FLEXI CAP FUND", "asset_class": "Mutual Funds (M)", "transaction_type": "Monthly SIP Purchase", "amount": 39897.32, "units": 582.443, "price_nav": 68.5, "pdf_filename": "NSDLe-CAS_DEMO_MAR_2024.PDF"}, {"statement_period": "APR 2024", "transaction_date": "2024-04-04", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "IN0020210145", "security_name": "GOVT OF INDIA SGB 2021-22 SERIES VI", "asset_class": "Government Securities (G)", "transaction_type": "Purchase", "amount": 21925.52, "units": 2.943, "price_nav": 7450.0, "pdf_filename": "NSDLe-CAS_DEMO_APR_2024.PDF"}, {"statement_period": "APR 2024", "transaction_date": "2024-04-27", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INFAIF009912", "security_name": "INDIA VENTURE OPPORTUNITY FUND", "asset_class": "Alternate Investment Fund (A)", "transaction_type": "Redemption", "amount": 13471.93, "units": 11.227, "price_nav": 1200.0, "pdf_filename": "NSDLe-CAS_DEMO_APR_2024.PDF"}, {"statement_period": "MAY 2024", "transaction_date": "2024-05-20", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "NPS_ICICI_SCHEME_E", "security_name": "ICICI PENSION FUND SCHEME E - TIER 1", "asset_class": "National Pension System (N)", "transaction_type": "Purchase", "amount": 26571.84, "units": 490.255, "price_nav": 54.2, "pdf_filename": "NSDLe-CAS_DEMO_MAY_2024.PDF"}, {"statement_period": "JUN 2024", "transaction_date": "2024-06-12", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INE018A07890", "security_name": "L&T FINANCE 8.5% CORPORATE BONDS", "asset_class": "Corporate Bonds (C)", "transaction_type": "Purchase", "amount": 34197.24, "units": 33.527, "price_nav": 1020.0, "pdf_filename": "NSDLe-CAS_DEMO_JUN_2024.PDF"}, {"statement_period": "JUL 2024", "transaction_date": "2024-07-05", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE155A04010", "security_name": "TATA MOTORS 7% PREFERENCE SHARES", "asset_class": "Preference Shares (P)", "transaction_type": "Purchase", "amount": 13046.04, "units": 1164.825, "price_nav": 11.2, "pdf_filename": "NSDLe-CAS_DEMO_JUL_2024.PDF"}, {"statement_period": "JUL 2024", "transaction_date": "2024-07-28", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE002A01018", "security_name": "RELIANCE INDUSTRIES LIMITED", "asset_class": "Equities (E)", "transaction_type": "Redemption", "amount": 17468.65, "units": 6.129, "price_nav": 2850.0, "pdf_filename": "NSDLe-CAS_DEMO_JUL_2024.PDF"}, {"statement_period": "AUG 2024", "transaction_date": "2024-08-20", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE040A01034", "security_name": "HDFC BANK LIMITED", "asset_class": "Equities (E)", "transaction_type": "Purchase", "amount": 44805.97, "units": 26.67, "price_nav": 1680.0, "pdf_filename": "NSDLe-CAS_DEMO_AUG_2024.PDF"}, {"statement_period": "SEP 2024", "transaction_date": "2024-09-12", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INF879O01019", "security_name": "PARAG PARIKH FLEXI CAP FUND", "asset_class": "Mutual Funds (M)", "transaction_type": "Monthly SIP Purchase", "amount": 30995.12, "units": 452.484, "price_nav": 68.5, "pdf_filename": "NSDLe-CAS_DEMO_SEP_2024.PDF"}, {"statement_period": "OCT 2024", "transaction_date": "2024-10-05", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "IN0020210145", "security_name": "GOVT OF INDIA SGB 2021-22 SERIES VI", "asset_class": "Government Securities (G)", "transaction_type": "Purchase", "amount": 22524.0, "units": 3.023, "price_nav": 7450.0, "pdf_filename": "NSDLe-CAS_DEMO_OCT_2024.PDF"}, {"statement_period": "OCT 2024", "transaction_date": "2024-10-28", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INFAIF009912", "security_name": "INDIA VENTURE OPPORTUNITY FUND", "asset_class": "Alternate Investment Fund (A)", "transaction_type": "Redemption", "amount": 25703.03, "units": 21.419, "price_nav": 1200.0, "pdf_filename": "NSDLe-CAS_DEMO_OCT_2024.PDF"}, {"statement_period": "NOV 2024", "transaction_date": "2024-11-20", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "NPS_ICICI_SCHEME_E", "security_name": "ICICI PENSION FUND SCHEME E - TIER 1", "asset_class": "National Pension System (N)", "transaction_type": "Purchase", "amount": 9840.17, "units": 181.553, "price_nav": 54.2, "pdf_filename": "NSDLe-CAS_DEMO_NOV_2024.PDF"}, {"statement_period": "DEC 2024", "transaction_date": "2024-12-13", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INE018A07890", "security_name": "L&T FINANCE 8.5% CORPORATE BONDS", "asset_class": "Corporate Bonds (C)", "transaction_type": "Purchase", "amount": 13987.89, "units": 13.714, "price_nav": 1020.0, "pdf_filename": "NSDLe-CAS_DEMO_DEC_2024.PDF"}, {"statement_period": "JAN 2025", "transaction_date": "2025-01-05", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE155A04010", "security_name": "TATA MOTORS 7% PREFERENCE SHARES", "asset_class": "Preference Shares (P)", "transaction_type": "Purchase", "amount": 18523.42, "units": 1653.877, "price_nav": 11.2, "pdf_filename": "NSDLe-CAS_DEMO_JAN_2025.PDF"}, {"statement_period": "JAN 2025", "transaction_date": "2025-01-28", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE002A01018", "security_name": "RELIANCE INDUSTRIES LIMITED", "asset_class": "Equities (E)", "transaction_type": "Redemption", "amount": 28532.35, "units": 10.011, "price_nav": 2850.0, "pdf_filename": "NSDLe-CAS_DEMO_JAN_2025.PDF"}, {"statement_period": "FEB 2025", "transaction_date": "2025-02-20", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE040A01034", "security_name": "HDFC BANK LIMITED", "asset_class": "Equities (E)", "transaction_type": "Purchase", "amount": 14204.59, "units": 8.455, "price_nav": 1680.0, "pdf_filename": "NSDLe-CAS_DEMO_FEB_2025.PDF"}, {"statement_period": "MAR 2025", "transaction_date": "2025-03-15", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INF879O01019", "security_name": "PARAG PARIKH FLEXI CAP FUND", "asset_class": "Mutual Funds (M)", "transaction_type": "Monthly SIP Purchase", "amount": 13808.7, "units": 201.587, "price_nav": 68.5, "pdf_filename": "NSDLe-CAS_DEMO_MAR_2025.PDF"}, {"statement_period": "APR 2025", "transaction_date": "2025-04-07", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "IN0020210145", "security_name": "GOVT OF INDIA SGB 2021-22 SERIES VI", "asset_class": "Government Securities (G)", "transaction_type": "Purchase", "amount": 7839.72, "units": 1.052, "price_nav": 7450.0, "pdf_filename": "NSDLe-CAS_DEMO_APR_2025.PDF"}, {"statement_period": "APR 2025", "transaction_date": "2025-04-30", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INFAIF009912", "security_name": "INDIA VENTURE OPPORTUNITY FUND", "asset_class": "Alternate Investment Fund (A)", "transaction_type": "Redemption", "amount": 30244.12, "units": 25.203, "price_nav": 1200.0, "pdf_filename": "NSDLe-CAS_DEMO_APR_2025.PDF"}, {"statement_period": "MAY 2025", "transaction_date": "2025-05-23", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "NPS_ICICI_SCHEME_E", "security_name": "ICICI PENSION FUND SCHEME E - TIER 1", "asset_class": "National Pension System (N)", "transaction_type": "Purchase", "amount": 14157.67, "units": 261.212, "price_nav": 54.2, "pdf_filename": "NSDLe-CAS_DEMO_MAY_2025.PDF"}, {"statement_period": "JUN 2025", "transaction_date": "2025-06-15", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INE018A07890", "security_name": "L&T FINANCE 8.5% CORPORATE BONDS", "asset_class": "Corporate Bonds (C)", "transaction_type": "Purchase", "amount": 41216.8, "units": 40.409, "price_nav": 1020.0, "pdf_filename": "NSDLe-CAS_DEMO_JUN_2025.PDF"}, {"statement_period": "JUL 2025", "transaction_date": "2025-07-08", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE155A04010", "security_name": "TATA MOTORS 7% PREFERENCE SHARES", "asset_class": "Preference Shares (P)", "transaction_type": "Purchase", "amount": 39385.42, "units": 3516.555, "price_nav": 11.2, "pdf_filename": "NSDLe-CAS_DEMO_JUL_2025.PDF"}, {"statement_period": "JUL 2025", "transaction_date": "2025-07-31", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE002A01018", "security_name": "RELIANCE INDUSTRIES LIMITED", "asset_class": "Equities (E)", "transaction_type": "Redemption", "amount": 7834.29, "units": 2.749, "price_nav": 2850.0, "pdf_filename": "NSDLe-CAS_DEMO_JUL_2025.PDF"}, {"statement_period": "AUG 2025", "transaction_date": "2025-08-23", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE040A01034", "security_name": "HDFC BANK LIMITED", "asset_class": "Equities (E)", "transaction_type": "Purchase", "amount": 14520.19, "units": 8.643, "price_nav": 1680.0, "pdf_filename": "NSDLe-CAS_DEMO_AUG_2025.PDF"}, {"statement_period": "SEP 2025", "transaction_date": "2025-09-15", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INF879O01019", "security_name": "PARAG PARIKH FLEXI CAP FUND", "asset_class": "Mutual Funds (M)", "transaction_type": "Monthly SIP Purchase", "amount": 31759.11, "units": 463.637, "price_nav": 68.5, "pdf_filename": "NSDLe-CAS_DEMO_SEP_2025.PDF"}, {"statement_period": "OCT 2025", "transaction_date": "2025-10-08", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "IN0020210145", "security_name": "GOVT OF INDIA SGB 2021-22 SERIES VI", "asset_class": "Government Securities (G)", "transaction_type": "Purchase", "amount": 13569.47, "units": 1.821, "price_nav": 7450.0, "pdf_filename": "NSDLe-CAS_DEMO_OCT_2025.PDF"}, {"statement_period": "OCT 2025", "transaction_date": "2025-10-31", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INFAIF009912", "security_name": "INDIA VENTURE OPPORTUNITY FUND", "asset_class": "Alternate Investment Fund (A)", "transaction_type": "Redemption", "amount": 10292.47, "units": 8.577, "price_nav": 1200.0, "pdf_filename": "NSDLe-CAS_DEMO_OCT_2025.PDF"}, {"statement_period": "NOV 2025", "transaction_date": "2025-11-23", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "NPS_ICICI_SCHEME_E", "security_name": "ICICI PENSION FUND SCHEME E - TIER 1", "asset_class": "National Pension System (N)", "transaction_type": "Purchase", "amount": 42420.57, "units": 782.667, "price_nav": 54.2, "pdf_filename": "NSDLe-CAS_DEMO_NOV_2025.PDF"}, {"statement_period": "DEC 2025", "transaction_date": "2025-12-16", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INE018A07890", "security_name": "L&T FINANCE 8.5% CORPORATE BONDS", "asset_class": "Corporate Bonds (C)", "transaction_type": "Purchase", "amount": 27841.72, "units": 27.296, "price_nav": 1020.0, "pdf_filename": "NSDLe-CAS_DEMO_DEC_2025.PDF"}, {"statement_period": "JAN 2026", "transaction_date": "2026-01-08", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE155A04010", "security_name": "TATA MOTORS 7% PREFERENCE SHARES", "asset_class": "Preference Shares (P)", "transaction_type": "Purchase", "amount": 23906.84, "units": 2134.539, "price_nav": 11.2, "pdf_filename": "NSDLe-CAS_DEMO_JAN_2026.PDF"}, {"statement_period": "JAN 2026", "transaction_date": "2026-01-31", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE002A01018", "security_name": "RELIANCE INDUSTRIES LIMITED", "asset_class": "Equities (E)", "transaction_type": "Redemption", "amount": 36384.78, "units": 12.767, "price_nav": 2850.0, "pdf_filename": "NSDLe-CAS_DEMO_JAN_2026.PDF"}, {"statement_period": "FEB 2026", "transaction_date": "2026-02-23", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "INE040A01034", "security_name": "HDFC BANK LIMITED", "asset_class": "Equities (E)", "transaction_type": "Purchase", "amount": 37299.88, "units": 22.202, "price_nav": 1680.0, "pdf_filename": "NSDLe-CAS_DEMO_FEB_2026.PDF"}, {"statement_period": "MAR 2026", "transaction_date": "2026-03-18", "pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "isin": "INF879O01019", "security_name": "PARAG PARIKH FLEXI CAP FUND", "asset_class": "Mutual Funds (M)", "transaction_type": "Monthly SIP Purchase", "amount": 12616.4, "units": 184.181, "price_nav": 68.5, "pdf_filename": "NSDLe-CAS_DEMO_MAR_2026.PDF"}, {"statement_period": "APR 2026", "transaction_date": "2026-04-10", "pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "isin": "IN0020210145", "security_name": "GOVT OF INDIA SGB 2021-22 SERIES VI", "asset_class": "Government Securities (G)", "transaction_type": "Purchase", "amount": 8877.23, "units": 1.192, "price_nav": 7450.0, "pdf_filename": "NSDLe-CAS_DEMO_APR_2026.PDF"}];
+    const familyProfiles = [{"pan": "ABCDE1234F", "investor_name": "JOHN DOE (DEMO INVESTOR)", "cas_id": "889900112", "statement_count": 78}, {"pan": "XYZWB9876M", "investor_name": "JANE DOE (SPOUSE)", "cas_id": "990011223", "statement_count": 45}];
+
+    let filteredHoldings = [...holdingsData];
+    let filteredTx = [...transactionsData];
+    let txCurrentPage = 1;
+    const txPageSize = 50;
+
+    const familySelect = document.getElementById('familySelect');
+    familyProfiles.forEach(fp => {
+      const opt = document.createElement('option');
+      opt.value = fp.pan;
+      opt.innerText = `👤 ${fp.investor_name} (PAN: ${fp.pan}) - ${fp.statement_count} Statements`;
+      familySelect.appendChild(opt);
+    });
+
+    function onFamilyChange() {
+      const selPan = familySelect.value;
+      if (selPan === 'ALL') {
+        document.getElementById('invName').innerText = 'Consolidated Family Portfolio';
+        document.getElementById('invPan').innerText = 'FAMILY_CONSOLIDATED';
+        document.getElementById('invAvatar').innerText = '👨‍👩‍👧‍👦';
+        filteredHoldings = [...holdingsData];
+        filteredTx = [...transactionsData];
+      } else {
+        const profile = familyProfiles.find(fp => fp.pan === selPan);
+        if (profile) {
+          document.getElementById('invName').innerText = profile.investor_name;
+          document.getElementById('invPan').innerText = profile.pan;
+          document.getElementById('invAvatar').innerText = profile.investor_name.charAt(0);
+        }
+        filteredHoldings = holdingsData.filter(h => h.pan === selPan || selPan === 'ALL');
+        filteredTx = transactionsData.filter(t => t.pan === selPan || selPan === 'ALL');
+      }
+      txCurrentPage = 1;
+      renderHoldingsTable();
+      renderTxTable();
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    function renderTblMom() {
+      const tbody = document.getElementById('tblMomBody');
+      tbody.innerHTML = '';
+      for (const [cat, stats] of Object.entries(momSummary)) {
+        const tr = document.createElement('tr');
+        const isPos = stats.market_appreciation >= 0;
+        tr.innerHTML = `<td><strong>${cat}</strong></td><td>₹${stats.prev_value.toLocaleString('en-IN')}</td><td>₹${stats.curr_value.toLocaleString('en-IN')}</td><td>₹${stats.net_capital_inflow.toLocaleString('en-IN')}</td><td style="color:${isPos?'var(--green)':'var(--red)'}">₹${stats.market_appreciation.toLocaleString('en-IN')}</td><td style="font-weight:600;color:${stats.organic_growth_pct>=0?'var(--green)':'var(--red)'}">${stats.organic_growth_pct>0?'+':''}${stats.organic_growth_pct}%</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function renderHoldingsTable() {
+      const tbody = document.getElementById('tblHoldingsBody');
+      tbody.innerHTML = '';
+      filteredHoldings.forEach(h => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><span class="badge badge-eq">${h.asset_class}</span></td><td style="font-family:monospace;color:#94a3b8;">${h.isin}</td><td><strong>${h.security_name}</strong></td><td style="color:#94a3b8;">${h.depository} (${h.dp_id})</td><td>${h.quantity.toLocaleString('en-IN')}</td><td>₹${h.price.toLocaleString('en-IN')}</td><td><strong>₹${h.value.toLocaleString('en-IN')}</strong></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterHoldings() {
+      const q = document.getElementById('holdingsSearch').value.toLowerCase();
+      const cat = document.getElementById('holdingsCategoryFilter').value;
+      const selPan = familySelect.value;
+      filteredHoldings = holdingsData.filter(h => ((h.security_name || '').toLowerCase().includes(q) || (h.isin || '').toLowerCase().includes(q)) && (cat === 'ALL' || h.asset_class === cat) && (selPan === 'ALL' || h.pan === selPan));
+      renderHoldingsTable();
+    }
+
+    function renderTblXirr() {
+      const tbody = document.getElementById('tblXirrBody');
+      tbody.innerHTML = '';
+      for (const [cat, info] of Object.entries(categoryXirrs)) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><strong>${cat}</strong></td><td>${info.first_date}</td><td>₹${info.init_value.toLocaleString('en-IN')}</td><td>₹${info.curr_value.toLocaleString('en-IN')}</td><td style="font-weight:700;color:var(--green)">+${info.xirr_pct}%</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function renderTxTable() {
+      const tbody = document.getElementById('tblTxBody');
+      tbody.innerHTML = '';
+      const start = (txCurrentPage - 1) * txPageSize;
+      const pageData = filteredTx.slice(start, start + txPageSize);
+      pageData.forEach(tx => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><strong>${tx.transaction_date}</strong></td><td>${tx.statement_period}</td><td><span class="badge badge-eq">${tx.asset_class}</span></td><td style="font-family:monospace;color:#94a3b8;">${tx.isin}</td><td>${tx.security_name}</td><td>${tx.transaction_type}</td><td>₹${tx.amount.toLocaleString('en-IN')}</td><td>₹${tx.price_nav.toLocaleString('en-IN')}</td><td>${tx.units.toLocaleString('en-IN')}</td>`;
+        tbody.appendChild(tr);
+      });
+      const totalPages = Math.ceil(filteredTx.length / txPageSize) || 1;
+      document.getElementById('txPageInfo').innerText = `Page ${txCurrentPage} of ${totalPages} (${filteredTx.length} transactions)`;
+      document.getElementById('btnPrevPage').disabled = txCurrentPage === 1;
+      document.getElementById('btnNextPage').disabled = txCurrentPage === totalPages;
+    }
+
+    function filterTx() {
+      const q = document.getElementById('txSearch').value.toLowerCase();
+      const cat = document.getElementById('txCategoryFilter').value;
+      const selPan = familySelect.value;
+      filteredTx = transactionsData.filter(t => ((t.security_name || '').toLowerCase().includes(q) || (t.isin || '').toLowerCase().includes(q) || (t.transaction_type || '').toLowerCase().includes(q)) && (cat === 'ALL' || t.asset_class === cat) && (selPan === 'ALL' || t.pan === selPan));
+      txCurrentPage = 1;
+      renderTxTable();
+    }
+
+    function prevTxPage() { if (txCurrentPage > 1) { txCurrentPage--; renderTxTable(); } }
+    function nextTxPage() { const totalPages = Math.ceil(filteredTx.length / txPageSize); if (txCurrentPage < totalPages) { txCurrentPage++; renderTxTable(); } }
+
+    const categories = Array.from(new Set(holdingsData.map(h => h.asset_class)));
+    categories.forEach(c => {
+      const opt = document.createElement('option'); opt.value = c; opt.innerText = c;
+      document.getElementById('holdingsCategoryFilter').appendChild(opt);
+      const opt2 = document.createElement('option'); opt2.value = c; opt2.innerText = c;
+      document.getElementById('txCategoryFilter').appendChild(opt2);
+    });
+
+    renderTblMom(); renderHoldingsTable(); renderTblXirr(); renderTxTable();
+
+    new Chart(document.getElementById('chartValueTrajectory'), {
+      type: 'line',
+      data: { labels: timelineData.periods, datasets: [{ label: 'Portfolio Valuation (₹)', data: timelineData.portfolio_values, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true }, { label: 'Cumulative Net Inflows (₹)', data: timelineData.cum_inflows, borderColor: '#10b981', borderDash: [5, 5] }] },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    const catLabels = Object.keys(categoryXirrs);
+    new Chart(document.getElementById('chartCategoryDoughnut'), {
+      type: 'doughnut',
+      data: { labels: catLabels, datasets: [{ data: catLabels.map(c => holdingsData.filter(h => h.asset_class === c).reduce((sum, h) => sum + h.value, 0)), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#14b8a6', '#ec4899'] }] },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    new Chart(document.getElementById('chartCategoryXirrBar'), {
+      type: 'bar',
+      data: { labels: catLabels, datasets: [{ label: 'XIRR (%)', data: catLabels.map(c => categoryXirrs[c].xirr_pct), backgroundColor: '#10b981' }] },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    new Chart(document.getElementById('chartCapitalVsValuation'), {
+      type: 'bar',
+      data: { labels: catLabels, datasets: [{ label: 'Capital Deployed (₹)', data: catLabels.map(c => categoryXirrs[c].init_value), backgroundColor: '#3b82f6' }, { label: 'Current Valuation (₹)', data: catLabels.map(c => categoryXirrs[c].curr_value), backgroundColor: '#10b981' }] },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    new Chart(document.getElementById('chartZerodhaNavCurve'), {
+      type: 'line',
+      data: { labels: timelineData.periods, datasets: [{ label: 'Zerodha NAV (Base 100)', data: timelineData.nav_series, borderColor: '#f59e0b', yAxisID: 'yNav' }, { label: 'Valuation (₹)', data: timelineData.portfolio_values, borderColor: '#3b82f6', borderDash: [3, 3], yAxisID: 'yVal' }] },
+      options: { responsive: true, maintainAspectRatio: false, scales: { yNav: { position: 'left' }, yVal: { position: 'right' } } }
+    });
+  </script>
+</body>
+</html>
